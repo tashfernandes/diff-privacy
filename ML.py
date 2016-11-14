@@ -13,15 +13,22 @@ class MLDataSet:
 class MLData:
     '''This class holds data for use in machine learning.'''
 
-    def __init__(self, data, split=None):
+    # Subset holds the number of elements to select for the dataset
+    # Split holds the fraction of elements in the full dataset to use in training
+    def __init__(self, data, subset=None, split=None):
         # Split into training and test
-        self._training, self._test = self._split(data, split)
+        self._training, self._test = self._split( data, subset, split)
 
-    def _split(self, data, percent):
+    def _split(self, data, subset, percent):
         '''Split the data into training and test sets. Assumes the dataset is already randomised.'''
 
         full_data = data.get_data()
         full_target = data.get_target()
+
+        if subset != None:
+            full_data = full_data[0:subset]
+            full_target = full_target[0:subset]
+
         if percent == None:
             return MLDataSet(full_data, full_target), MLDataSet(full_data, full_target)
 
