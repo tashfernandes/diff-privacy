@@ -2,6 +2,19 @@ import sklearn as sk
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
+class Report:
+
+    def __init__(self, expected, predicted):
+        self._expected = expected
+        self._predicted = predicted
+
+    def print_report(self):
+        print(sk.metrics.classification_report(self._expected, self._predicted))
+        print(sk.metrics.confusion_matrix(self._expected, self._predicted))
+
+    def accuracy(self):
+        return float(np.sum(self._expected == self._predicted)) / float(len(self._expected))
+
 class Regression:
     
     def __init__(self, params):
@@ -18,16 +31,11 @@ class Regression:
     def test(self, data, target):
         self.predicted = self._model.predict(data)
         self.expected = target
-
-    def print_report(self):
-        print(sk.metrics.classification_report(self.expected, self.predicted))
-        print(sk.metrics.confusion_matrix(self.expected, self.predicted))
+        self._report = Report(self.expected, self.predicted)
+        return self._report
 
     def model(self):
         return self._model
-
-    def accuracy(self):
-        return float(np.sum(self.expected == self.predicted)) / float(len(self.expected))
 
 class DPRegression:
 
@@ -46,9 +54,6 @@ class DPRegression:
             noise_vecs.append(self._privacy.generate_noise_vector())
         noise_vecs = np.array(noise_vecs)
 
-        print "Noise vec: ", noise_vecs.shape
-        print "Model: ", model_coef.shape
-
         # Let's check we've done the calc right...
         noise_dim = noise_vecs.shape[0]
         model_dim = model_coef.shape[1]
@@ -56,17 +61,12 @@ class DPRegression:
         #    raise Exception("Dimensions for noise vector are incorrect, should be ", model_dim)
 
         noisy_model = np.add(model_coef, noise_vecs)
-        #print "Old model: ", model_coef
-        #print "New model: ", noisy_model
         self._model.coef_ = noisy_model
 
         self.predicted = self._model.predict(data)
         self.expected = target
 
-    def print_report(self):
-        print(sk.metrics.classification_report(self.expected, self.predicted))
-        print(sk.metrics.confusion_matrix(self.expected, self.predicted))
+        self._report = Report(self.expected, self.predicted)
+        return self._report
 
-    def accuracy(self):
-        return float(np.sum(self.expected == self.predicted)) / float(len(self.expected))
 
