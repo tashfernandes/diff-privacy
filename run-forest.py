@@ -7,31 +7,41 @@ from Algorithms import Regression
 from Algorithms import DPRegression
 from Privacy import Privacy
 
+import csv
+
 dataset = ForestData( CsvData('../forestdata/raw/tx_regression.csv') )
-#dataset = ForestData( CsvData('sample.csv') )
-mldata = MLData(dataset, split=0.8)
 
-# TODO: Check that this lambda is actually being used
+results = []
 
-for i, C in enumerate((10.0,2.0,1.0,0.1,0.05,0.01,0.001)):
-    regr = Regression( { 'lambda' : C } )
+for subset in (1000, 10000, 50000, 100000, 200000, 500000, None):
+    mldata = MLData(dataset, subset=subset, split=0.8)
     training = mldata.training()
-    regr.train(training.data(), training.target())
     test = mldata.test()
-    regr.test(test.data(), test.target())
-    regr.print_report()
 
-    acc = regr.accuracy()
-    print "Accuracy: ", acc
+    for C in (10.0,2.0,1.0,0.1,0.05,0.01,0.001):
+        regr = Regression( { 'lambda' : C } )
+        regr.train(training.data(), training.target())
+        report = regr.test(test.data(), test.target())
 
-    # Now let's add differential privacy to the model
+        acc = report.accuracy()
 
-    training_data =  training.data()
-    epsilon = 0.1
-    privacy = Privacy(lda=C, data_size=len(training_data), dim=training_data.shape[1], epsilon=epsilon)
-    private_regr = DPRegression( regr.model(), privacy )
-    private_regr.test(test.data(), test.target())
-    private_regr.print_report()
+        # Now let's add differential privacy to the model
+        training_data = training.data()
 
-    acc = private_regr.accuracy()
-    print "Accuracy: ", acc
+        for epsilon in (10.0, 5.0, 2.0, 1.0, 0.1, 0.01, 0.001):
+            privacy = Privacy(lda=C, data_size=len(training_data), dim=training_data.shape[1], epsilon=epsilon)
+            private_regr = DPRegression( regr.model(), privacy )
+            dp_report = private_regr.test(test.data(), test.target())
+
+            dp_acc = dp_report.accuracy()
+
+            results.append( { 'size' : len(training_data), 'epsilon': epsilon, 'lambda' : C, 'accuracy' : acc, 'dp_accuracy' : dp_acc } )
+
+
+if len(results) > 0:
+    output_file = open('results.csv', 'wb')
+    writer = csv.DictWriter(output_file, fieldnames = results[0].keys())
+    writer.writeheader()
+    for row in results:
+        writer.writerow(row)
+    output_file.close()
