@@ -1,6 +1,8 @@
 import sklearn as sk
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
 
 class Report:
 
@@ -13,19 +15,19 @@ class Report:
         print(sk.metrics.confusion_matrix(self._expected, self._predicted))
 
     def accuracy(self):
-        return float(np.sum(self._expected == self._predicted)) / float(len(self._expected))
+        #return float(np.sum(self._expected == self._predicted)) / float(len(self._expected))
+        return sk.metrics.accuracy_score(self._expected, self._predicted)
 
 class Regression:
     
     def __init__(self, params):
         self.params = params
-
-    def train(self, data, target):
         self._model = LogisticRegression(
             C=self.params['lambda'],
             solver='lbfgs',
             multi_class='multinomial')
-        
+
+    def train(self, data, target):
         self._model.fit(data, target)
 
     def test(self, data, target):
@@ -36,6 +38,27 @@ class Regression:
 
     def model(self):
         return self._model
+
+class NaiveBayes:
+
+    def __init__(self, params):
+        self.params = params
+        if not 'alpha' in self.params:
+            self.params['alpha'] = 1.0
+        self._model = MultinomialNB(alpha=self.params['alpha'])
+        self._vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5, stop_words='english')
+
+    def train(self, data, target):
+        X_train = self._vectorizer.fit_transform(data)
+        self._model.fit(X_train, target)
+
+    def test(self, data, target):
+        X_test = self._vectorizer.transform(data)
+        self.predicted = self._model.predict(X_test)
+        self.expected = target
+        self._report = Report(self.expected, self.predicted)
+        return self._report
+
 
 class DPRegression:
 
