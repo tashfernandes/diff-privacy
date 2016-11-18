@@ -1,3 +1,4 @@
+from sklearn.datasets import fetch_20newsgroups
 import numpy as np
 import csv
 
@@ -37,11 +38,36 @@ class ForestData:
             data.append(vals_converted)
             target.append(y)
 
-        self.data = np.asarray(data)
-        self.target = np.asarray(target)
+        self._data = np.array(data)
+        self._target = np.array(target)
 
-    def get_data(self):
-        return self.data
+    def data(self):
+        return self._data
 
-    def get_target(self):
-        return self.target
+    def target(self):
+        return self._target
+
+class NewsgroupDataSet:
+       
+    def __init__(self, data):
+        self._data = data
+
+    def data(self):
+        return self._data.data
+
+    def target(self):
+        return self._data.target
+
+
+class NewsgroupsData:
+
+    def __init__(self, categories):
+        self._training = NewsgroupDataSet( fetch_20newsgroups(subset='train', categories=categories) )
+        self._test = NewsgroupDataSet(fetch_20newsgroups(subset='test', categories=categories))
+
+    def training(self):
+        return self._training
+    
+    def test(self):
+        return self._test
+
