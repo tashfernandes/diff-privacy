@@ -2,7 +2,7 @@
 
 from DPData import CsvData
 from DPData import ForestData
-from ML import MLData
+from ML import MLDataGenerator
 from Algorithms import Regression
 from Algorithms import DPRegression
 from Privacy import Privacy
@@ -14,9 +14,7 @@ dataset = ForestData( CsvData('../forestdata/raw/tx_regression.csv') )
 results = []
 
 for subset in (1000, 10000, 50000, 100000, 200000, 500000, None):
-    mldata = MLData(dataset, subset=subset, split=0.8)
-    training = mldata.training()
-    test = mldata.test()
+    training, test = MLDataGenerator.createTrainTestData(dataset, subset=subset, split=0.8)
 
     for C in (10.0,2.0,1.0,0.1,0.05,0.01,0.001):
         regr = Regression( { 'lambda' : C } )
@@ -28,7 +26,7 @@ for subset in (1000, 10000, 50000, 100000, 200000, 500000, None):
         # Now let's add differential privacy to the model
         training_data = training.data()
 
-        for epsilon in (10.0, 5.0, 2.0, 1.0, 0.1, 0.01, 0.001):
+        for epsilon in (1.0, 0.8, 0.5, 0.1, 0.08, 0.05, 0.01, 0.005, 0.001):
             privacy = Privacy(lda=C, data_size=len(training_data), dim=training_data.shape[1], epsilon=epsilon)
             private_regr = DPRegression( regr.model(), privacy )
             dp_report = private_regr.test(test.data(), test.target())
