@@ -21,9 +21,9 @@ class Report:
 class Regression:
     
     def __init__(self, params):
-        self.params = params
+        self._params = params
         self._model = LogisticRegression(
-            C=self.params['lambda'],
+            C=1.0/self._params['lambda'],
             solver='lbfgs',
             multi_class='multinomial')
 
@@ -39,25 +39,8 @@ class Regression:
     def model(self):
         return self._model
 
-class NaiveBayes:
-
-    def __init__(self, params):
-        self.params = params
-        if not 'alpha' in self.params:
-            self.params['alpha'] = 1.0
-        self._model = MultinomialNB(alpha=self.params['alpha'])
-        self._vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5, stop_words='english')
-
-    def train(self, data, target):
-        X_train = self._vectorizer.fit_transform(data)
-        self._model.fit(X_train, target)
-
-    def test(self, data, target):
-        X_test = self._vectorizer.transform(data)
-        self.predicted = self._model.predict(X_test)
-        self.expected = target
-        self._report = Report(self.expected, self.predicted)
-        return self._report
+    def params(self):
+        return self._params
 
 
 class DPRegression:
@@ -93,3 +76,31 @@ class DPRegression:
         return self._report
 
 
+class NaiveBayes:
+
+    def __init__(self, params):
+        self.params = params
+        if not 'alpha' in self.params:
+            self.params['alpha'] = 1.0
+        self._model = MultinomialNB(alpha=self.params['alpha'])
+        self._vectorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.5, stop_words='english')
+
+    def train(self, data, target):
+        X_train = self._vectorizer.fit_transform(data)
+        self._model.fit(X_train, target)
+
+    def test(self, data, target):
+        X_test = self._vectorizer.transform(data)
+        self.predicted = self._model.predict(X_test)
+        self.expected = target
+        self._report = Report(self.expected, self.predicted)
+        return self._report
+
+    def model(self):
+        return self._model
+
+
+class DPNaiveBayes:
+
+    def __init__(self, model):
+        self._model = model
