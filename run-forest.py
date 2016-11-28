@@ -26,15 +26,15 @@ for trial in range(10):
             # Now let's add differential privacy to the model
             training_data = training.data()
 
-            for epsilon in (10.0, 8.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.8, 0.5, 0.1, 0.08, 0.05, 0.01, 0.005, 0.001):
-                privacy = DiffPrivacy(epsilon=epsilon)
-                regr_params = {'lambda' : lda, 'data_size' : len(training_data), 'dim' : training_data.shape[1]}
-                private_regr = DPRegression( regr.model(), regr_params, privacy )
+            for epsilon in (10.0, 8.0, 5.0, 3.0, 1.0, 0.8, 0.5, 0.3, 0.1, 0.08, 0.05, 0.03, 0.01, 0.008, 0.005, 0.003, 0.001, 0.0008, 0.0005, 0.0001):
+                regr_params = {'lambda' : lda, 'data_size' : training_data.shape[0], 'dim' : training_data.shape[1]}
+                privacy = DiffPrivacy(epsilon=epsilon, params=regr_params)
+                private_regr = DPRegression( regr.model(), privacy )
                 dp_report = private_regr.test(test.data(), test.target())
 
                 dp_acc = dp_report.accuracy()
 
-                results.append( { 'size' : len(training_data), 'epsilon': epsilon, 'lambda' : lda, 'accuracy' : acc, 'dp_accuracy' : dp_acc } )
+                results.append( { 'size' : training_data.shape[0], 'epsilon': epsilon, 'lambda' : lda, 'accuracy' : acc, 'dp_accuracy' : dp_acc } )
 
 
     if len(results) > 0:
