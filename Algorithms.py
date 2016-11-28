@@ -53,6 +53,8 @@ class DPRegression:
 
     def test(self, data, target):
         '''Adds differential privacy to the model and then runs the prediction.'''
+        # First save the coefficients so we can replace them afterwards!!!
+
         model_coef = self._model.coef_
         num_rows = model_coef.shape[0]
         noise_vecs = []
@@ -67,10 +69,13 @@ class DPRegression:
         #    raise Exception("Dimensions for noise vector are incorrect, should be ", model_dim)
 
         noisy_model = np.add(model_coef, noise_vecs)
-        self._model.coef_ = noisy_model
 
+        self._model.coef_ = noisy_model
         self.predicted = self._model.predict(data)
+        self._model.coef_ = model_coef
+
         self.expected = target
+
 
         self._report = Report(self.expected, self.predicted)
         return self._report
